@@ -50,7 +50,7 @@ public class Unsplash {
         }
     }
     
-    func photoManifest(id: String, handler: @escaping (JSON?) -> Void) {
+    public func photoManifest(id: String, handler: @escaping (JSON?) -> Void) {
         guard let encodedID = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed), let url = URL(string: "/photos/\(encodedID)", relativeTo: baseURL) else {
             handler(nil)
             return
@@ -61,7 +61,7 @@ public class Unsplash {
         }
     }
     
-    func photo(id: String, handler: @escaping (NSImage?) -> Void) {
+    public func photo(id: String, handler: @escaping (NSImage?) -> Void) {
         photoManifest(id: id) { (manifest) in
             guard let manifest = manifest else {
                 handler(nil)
