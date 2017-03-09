@@ -50,6 +50,17 @@ public class Unsplash {
         }
     }
     
+    public func randomPhotoManifest(handler: @escaping (JSON?) -> Void) {
+        if let url = URL(string: "/photos/random", relativeTo: baseURL) {
+            json(for: url) { (json, _) in
+                handler(json)
+            }
+        } else {
+            handler(nil)
+            return
+        }
+    }
+    
     public func photoManifest(id: String, handler: @escaping (JSON?) -> Void) {
         guard let encodedID = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed), let url = URL(string: "/photos/\(encodedID)", relativeTo: baseURL) else {
             handler(nil)
@@ -61,6 +72,18 @@ public class Unsplash {
         }
     }
     
+    public func photo(manifest: JSON, handler: @escaping (NSImage?) -> Void) {
+        if let imageURL = URL(string: manifest["urls"]["full"].stringValue) {
+            self.session(for: imageURL) { (data, _, _) in
+                if let data = data {
+                    handler(NSImage(data: data))
+                } else {
+                    handler(nil)
+                }
+            }
+        }
+    }
+    
     public func photo(id: String, handler: @escaping (NSImage?) -> Void) {
         photoManifest(id: id) { (manifest) in
             guard let manifest = manifest else {
@@ -68,38 +91,18 @@ public class Unsplash {
                 return
             }
             
-            if let imageURL = URL(string: manifest["urls"]["full"].stringValue) {
-                self.session(for: imageURL) { (data, _, error) in
-                    if let data = data {
-                        handler(NSImage(data: data))
-                    } else {
-                        handler(nil)
-                    }
-                }
-            }
+            self.photo(manifest: manifest, handler: handler)
         }
     }
     
-    public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
-        let session = URLSession.shared.dataTask(with: URL(string: "/photos/random?client_id=\(appID)", relativeTo: baseURL)!) { (data, response, error) in
-            do {
-                let json = try JSONSerialization.jsonObject(with: data!, options: .allowFragments)
-                if let obj = json as? [String: AnyObject], let urls = obj["urls"] as? [String: AnyObject], let full = urls["full"] as? String {
-                    guard let url = URL(string: full) else {
-                        print("URL couldn't be made")
-                        return
-                    }
-                    
-                    imageHandler(NSImage(contentsOf: url)!)
-                } else {
-                    print(json)
-                }
-            } catch {
-                print("Uh")
+    public func randomPhoto(handler: @escaping  (NSImage?) -> Void) {
+        randomPhotoManifest { (manifest) in
+            guard let manifest = manifest else {
+                handler(nil)
+                return
             }
+            
+            self.photo(manifest: manifest, handler: handler)
         }
-
-        session.resume()
     }
-
 }
