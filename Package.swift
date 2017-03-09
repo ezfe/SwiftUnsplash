@@ -1,5 +1,8 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftUnsplash"
+    name: "SwiftUnsplash",
+    dependencies: [
+        .Package(url: "https://github.com/SwiftyJSON/SwiftyJSON", majorVersion: 3)
+    ]
 )

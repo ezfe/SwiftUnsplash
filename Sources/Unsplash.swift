@@ -7,14 +7,53 @@
 //
 
 import Cocoa
+import SwiftyJSON
 
 public class Unsplash {
-    fileprivate let appID: String
+    let appID: String
     
-    fileprivate let baseURL = URL(string: "https://api.unsplash.com/")!
+    let baseURL = URL(string: "https://api.unsplash.com/")!
     
     public init(appID: String) {
         self.appID = appID
+    }
+    
+    func request(for url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.addValue("Client-ID \(appID)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+    
+    public func getUser(username: String, error errorHandler: @escaping (() -> Void) = {() in}, success: @escaping (JSON) -> Void) {
+        guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
+            print("URL creation failed")
+            errorHandler()
+            return
+        }
+        let request = self.request(for: url)
+        let session = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("Unable to make HTTPURLResponse object")
+                errorHandler()
+                return
+            }
+            
+            if httpResponse.statusCode != 200 {
+                print("Status code: \(httpResponse)")
+                errorHandler()
+                return
+            }
+            
+            guard let data = data else {
+                print(error?.localizedDescription ?? "Unknown Network Error")
+                errorHandler()
+                return
+            }
+            
+            let json = JSON(data: data)
+            success(json)
+        }
+        session.resume()
     }
     
     public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
