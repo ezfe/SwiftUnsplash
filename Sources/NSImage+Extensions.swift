@@ -12,8 +12,8 @@ import Cocoa
  * Based off code example from
  * http://stackoverflow.com/a/39677995/2059595
  */
-extension NSImage {
-    func save(to url: URL, as: NSBitmapImageFileType = NSBitmapImageFileType.PNG) throws {
+public extension NSImage {
+    public func save(to url: URL, as: NSBitmapImageFileType = NSBitmapImageFileType.PNG) throws {
         enum SaveError: Error {
             case tiffFailed
             case representationFailed

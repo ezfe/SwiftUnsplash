@@ -8,16 +8,16 @@
 
 import Cocoa
 
-class Unsplash {
-    let appID: String
+public class Unsplash {
+    fileprivate let appID: String
     
-    let baseURL = URL(string: "https://api.unsplash.com/")!
+    fileprivate let baseURL = URL(string: "https://api.unsplash.com/")!
     
-    init(appID: String) {
+    public init(appID: String) {
         self.appID = appID
     }
     
-    func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
+    public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
         let session = URLSession.shared.dataTask(with: URL(string: "/photos/random?client_id=\(appID)", relativeTo: baseURL)!) { (data, response, error) in
             do {
                 let json = try JSONSerialization.jsonObject(with: data!, options: .allowFragments)
