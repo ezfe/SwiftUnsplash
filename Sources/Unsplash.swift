@@ -37,25 +37,47 @@ public class Unsplash {
                 handler(nil, error)
             }
         }
-        
     }
     
-    @discardableResult
-    public func getUser(name username: String, handler: @escaping (JSON?) -> Void) -> Bool {
-        guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
-            print("URL creation failed")
-            return false
+    public func getUser(name username: String, handler: @escaping (JSON?) -> Void) {
+        guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
+            handler(nil)
+            return
         }
 
-        json(for: url) { (json, error) in
-            if let json = json {
-                handler(json)
-            } else {
-                print("Failure fetching user")
-            }
+        json(for: url) { (json, _) in
+            handler(json)
+        }
+    }
+    
+    func photoManifest(id: String, handler: @escaping (JSON?) -> Void) {
+        guard let encodedID = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed), let url = URL(string: "/photos/\(encodedID)", relativeTo: baseURL) else {
+            handler(nil)
+            return
         }
         
-        return true
+        json(for: url) { (json, _) in
+            handler(json)
+        }
+    }
+    
+    func photo(id: String, handler: @escaping (NSImage?) -> Void) {
+        photoManifest(id: id) { (manifest) in
+            guard let manifest = manifest else {
+                handler(nil)
+                return
+            }
+            
+            if let imageURL = URL(string: manifest["urls"]["full"].stringValue) {
+                self.session(for: imageURL) { (data, _, error) in
+                    if let data = data {
+                        handler(NSImage(data: data))
+                    } else {
+                        handler(nil)
+                    }
+                }
+            }
+        }
     }
     
     public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
