@@ -24,29 +24,25 @@ public class Unsplash {
         return request
     }
     
-    public func getUser(username: String, error errorHandler: @escaping (() -> Void) = {() in}, success: @escaping (JSON) -> Void) {
+    public func getUser(username: String, error errorHandler: @escaping ((String) -> Void) = {(err) in print(err)}, success: @escaping (JSON) -> Void) {
         guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
-            print("URL creation failed")
-            errorHandler()
+            errorHandler("URL creation failed")
             return
         }
         let request = self.request(for: url)
         let session = URLSession.shared.dataTask(with: request) { (data, response, error) in
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Unable to make HTTPURLResponse object")
-                errorHandler()
+                errorHandler("Unable to make HTTPURLResponse object")
                 return
             }
             
             if httpResponse.statusCode != 200 {
-                print("Status code: \(httpResponse)")
-                errorHandler()
+                errorHandler("Status code received: \(httpResponse)")
                 return
             }
             
             guard let data = data else {
-                print(error?.localizedDescription ?? "Unknown Network Error")
-                errorHandler()
+                errorHandler(error?.localizedDescription ?? "Unknown Network Error")
                 return
             }
             
@@ -55,6 +51,8 @@ public class Unsplash {
         }
         session.resume()
     }
+    
+    
     
     public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
         let session = URLSession.shared.dataTask(with: URL(string: "/photos/random?client_id=\(appID)", relativeTo: baseURL)!) { (data, response, error) in
