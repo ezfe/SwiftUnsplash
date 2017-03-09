@@ -24,35 +24,39 @@ public class Unsplash {
         return request
     }
     
-    public func getUser(username: String, error errorHandler: @escaping ((String) -> Void) = {(err) in print(err)}, success: @escaping (JSON) -> Void) {
-        guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
-            errorHandler("URL creation failed")
-            return
-        }
-        let request = self.request(for: url)
-        let session = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            guard let httpResponse = response as? HTTPURLResponse else {
-                errorHandler("Unable to make HTTPURLResponse object")
-                return
-            }
-            
-            if httpResponse.statusCode != 200 {
-                errorHandler("Status code received: \(httpResponse)")
-                return
-            }
-            
-            guard let data = data else {
-                errorHandler(error?.localizedDescription ?? "Unknown Network Error")
-                return
-            }
-            
-            let json = JSON(data: data)
-            success(json)
-        }
+    func session(for url: URL, handler: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        let session = URLSession.shared.dataTask(with: request(for: url), completionHandler: handler)
         session.resume()
     }
     
+    func json(for url: URL, handler: @escaping (JSON?, Error?) -> Void) {
+        session(for: url) { (data, _, error) in
+            if let data = data {
+                handler(JSON(data), error)
+            } else {
+                handler(nil, error)
+            }
+        }
+        
+    }
     
+    @discardableResult
+    func getUser(name username: String, handler: @escaping (JSON?) -> Void) -> Bool {
+        guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
+            print("URL creation failed")
+            return false
+        }
+
+        json(for: url) { (json, error) in
+            if let json = json {
+                handler(json)
+            } else {
+                print("Failure fetching user")
+            }
+        }
+        
+        return true
+    }
     
     public func randomPhoto(imageHandler: @escaping (NSImage) -> Void) {
         let session = URLSession.shared.dataTask(with: URL(string: "/photos/random?client_id=\(appID)", relativeTo: baseURL)!) { (data, response, error) in
