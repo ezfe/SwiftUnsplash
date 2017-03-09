@@ -41,7 +41,7 @@ public class Unsplash {
     }
     
     @discardableResult
-    func getUser(name username: String, handler: @escaping (JSON?) -> Void) -> Bool {
+    public func getUser(name username: String, handler: @escaping (JSON?) -> Void) -> Bool {
         guard let encodedUsername = username.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: "/users/\(encodedUsername)", relativeTo: baseURL) else {
             print("URL creation failed")
             return false
